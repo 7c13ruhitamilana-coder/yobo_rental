@@ -115,4 +115,8 @@ elif st.session_state.step == 4:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         leads_sheet.append_row([
             timestamp, user['name'], user['phone'], user['email'],
-            user['days'], user['pickup
+            user['days'], user['pickup], user['dropoff'], user['city'],
+            f"{car['Make']} {car['Model']}", total_price, "Confirmed"
+        ])
+        st.balloons()
+        st.write("Booking Complete! You can close this window.")

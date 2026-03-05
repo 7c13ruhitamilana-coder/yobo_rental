@@ -5,6 +5,11 @@ from datetime import datetime
 
 # --- 1. SETUP & AUTH ---
 st.set_page_config(page_title="Yobo Car Rentals", page_icon="🚗", layout="wide")
+# --- 1. SETUP & AUTH ---
+gc = gspread.service_account_from_dict(st.secrets["gcp_service_account"])
+sh = gc.open("Workshop_Leads") 
+leads_sheet = sh.worksheet("Leads")
+cars_sheet = sh.worksheet("Cars")
 
 # 1. Pull the data from the 'Secrets' tab in Streamlit
     service_account_info = st.secrets["gcp_service_account"]

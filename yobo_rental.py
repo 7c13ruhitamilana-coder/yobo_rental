@@ -6,7 +6,7 @@ from datetime import datetime
 # --- 1. PAGE CONFIG ---
 st.set_page_config(page_title="Yobo Car Rentals", page_icon="🚗", layout="wide")
 
-# --- 2. THE "FORCE" CSS ---
+# --- 2. THE "CENTERED" CSS ---
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@800&display=swap');
@@ -15,6 +15,15 @@ st.markdown("""
         .stApp {
             background-color: #0E1117 !important;
             font-family: 'Inter', sans-serif !important;
+        }
+
+        /* Center the entire block container vertically */
+        .main .block-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 80vh; /* Adjusts height to center in the middle of the screen */
         }
 
         /* NEUE HAAS STYLE HEADING */
@@ -28,30 +37,22 @@ st.markdown("""
             -webkit-text-fill-color: transparent;
             text-align: center;
             margin-bottom: 20px;
+            width: 100%;
         }
 
-        /* REMOVE WHITE BOXES & ADD GRADIENT BORDERS TO INPUTS */
+        /* CENTERED PILL INPUT */
         div[data-baseweb="input"], div[data-baseweb="base-input"] {
             background-color: #161B22 !important;
             border-radius: 50px !important;
             border: none !important;
             box-shadow: 0 0 0 2px #A78BFA !important;
+            width: 100% !important;
         }
         
         input {
             color: white !important;
             background-color: transparent !important;
-        }
-
-        /* CAR CARDS WITH GRADIENT GLOW */
-        .car-card {
-            background-color: white !important;
-            border-radius: 20px !important;
-            padding: 20px !important;
-            margin-bottom: 20px !important;
-            display: flex !important;
-            align-items: center !important;
-            box-shadow: 0 0 0 3px #6366F1 !important;
+            text-align: center !important; /* Centers the typing text too */
         }
 
         /* BUTTONS */
@@ -62,11 +63,20 @@ st.markdown("""
             border: none !important;
             font-weight: 800 !important;
             width: 100% !important;
-            font-family: 'Inter', sans-serif !important;
+            margin-top: 10px;
         }
-        
-        /* Remove default Streamlit padding */
-        .block-container { padding-top: 2rem !important; }
+
+        /* CAR CARDS (Only apply centering to forms/greetings, not list) */
+        .car-card {
+            background-color: white !important;
+            border-radius: 20px !important;
+            padding: 20px !important;
+            margin-bottom: 20px !important;
+            display: flex !important;
+            align-items: center !important;
+            box-shadow: 0 0 0 3px #6366F1 !important;
+            text-align: left !important;
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -78,7 +88,7 @@ try:
     leads_sheet = sh.worksheet("Leads")
     cars_sheet = sh.worksheet("Cars")
 except Exception as e:
-    st.error("Check your Streamlit Secrets.")
+    st.error("Check Secrets.")
     st.stop()
 
 # --- 4. SESSION STATE ---
@@ -87,26 +97,27 @@ if "user_data" not in st.session_state: st.session_state.user_data = {}
 
 # --- 5. THE FLOW ---
 
-# STEP 1: GREETING
+# STEP 1: GREETING (Now Centered)
 if st.session_state.step == 1:
-    st.markdown("<h1 class='main-header'>Hello! I'm Yobo.</h1>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
+        st.markdown("<h1 class='main-header'>Hello! I'm Yobo.</h1>", unsafe_allow_html=True)
         name = st.text_input("", placeholder="Enter your full name...", key="name_input")
         if st.button("Get Started") and name:
             st.session_state.user_data['name'] = name
             st.session_state.step = 2
             st.rerun()
 
-# STEP 2: DETAILS
+# STEP 2: DETAILS (Now Centered)
 elif st.session_state.step == 2:
-    st.markdown(f"<h1 class='main-header'>Welcome, {st.session_state.user_data['name']}</h1>", unsafe_allow_html=True)
-    with st.container():
-        col1, col2 = st.columns(2)
-        with col1:
+    col1, col2, col3 = st.columns([1,3,1])
+    with col2:
+        st.markdown(f"<h1 class='main-header'>Welcome, {st.session_state.user_data['name']}</h1>", unsafe_allow_html=True)
+        inner_col1, inner_col2 = st.columns(2)
+        with inner_col1:
             phone = st.text_input("Phone Number")
             city = st.text_input("City")
-        with col2:
+        with inner_col2:
             pickup = st.date_input("Pickup Date")
             days = st.number_input("Days", min_value=1)
         if st.button("Browse Fleet"):
@@ -114,23 +125,19 @@ elif st.session_state.step == 2:
                 st.session_state.user_data.update({"phone": phone, "city": city, "days": days, "pickup": str(pickup)})
                 st.session_state.step = 3
                 st.rerun()
-            else:
-                st.warning("Please fill in the required details.")
 
-# STEP 3: FLEET SELECTION
+# STEP 3: FLEET (Scrollable list, so centering is vertical start)
 elif st.session_state.step == 3:
     st.markdown("<h1 class='main-header'>Signature Fleet</h1>", unsafe_allow_html=True)
     cars_data = cars_sheet.get_all_records()
-    available_cars = [c for c in cars_data if str(c['Available']).upper() == 'Y']
-    
-    for i, car in enumerate(available_cars):
-        with st.container():
+    for i, car in enumerate(cars_data):
+        if str(car['Available']).upper() == 'Y':
             st.markdown(f"""
             <div class="car-card">
                 <div style="flex:1"><img src="{car['Photo']}" width="100%" style="border-radius:10px;"></div>
                 <div style="flex:2; color:black; padding-left:20px;">
-                    <h2 style="margin:0; font-family:'Inter', sans-serif;">{car['Make']} {car['Model']}</h2>
-                    <p style="margin:5px 0;">{car['Details']} • {car['Colour']}</p>
+                    <h2 style="margin:0;">{car['Make']} {car['Model']}</h2>
+                    <p style="margin:5px 0;">{car['Details']}</p>
                     <h3 style="color:#6366F1; margin:0;">₹{car['PricePerDay']}/day</h3>
                 </div>
             </div>
@@ -139,27 +146,3 @@ elif st.session_state.step == 3:
                 st.session_state.user_data['selected_car'] = car
                 st.session_state.step = 4
                 st.rerun()
-
-# STEP 4: FINAL CONFIRMATION
-elif st.session_state.step == 4:
-    car = st.session_state.user_data['selected_car']
-    user = st.session_state.user_data
-    total = int(car['PricePerDay']) * int(user['days'])
-    
-    st.markdown("<h1 class='main-header'>Ready to go?</h1>", unsafe_allow_html=True)
-    
-    col1, col2, col3 = st.columns([1,2,1])
-    with col2:
-        st.info(f"Booking: {car['Make']} {car['Model']} for {user['days']} days.")
-        st.metric("Final Quote", f"₹{total}")
-        
-        if st.button("Confirm & Finish"):
-            leads_sheet.append_row([
-                datetime.now().strftime("%Y-%m-%d"), 
-                user['name'], 
-                user['phone'],
-                user['city'],
-                f"{car['Make']} {car['Model']}", 
-                total
-            ])
-            st.success("Booking saved! We will call you shortly.")

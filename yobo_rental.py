@@ -6,17 +6,20 @@ from datetime import datetime
 # --- 1. SETUP & AUTH ---
 st.set_page_config(page_title="Yobo Car Rentals", page_icon="🚗", layout="wide")
 
-# Google Sheets Setup
-try:
-    gc = gspread.service_account(filename='automated-booking-489306-264271fcc9b8.json')
-    sh = gc.open("Workshop_Leads")
+# 1. Pull the data from the 'Secrets' tab in Streamlit
+    service_account_info = st.secrets["gcp_service_account"]
+    
+    # 2. Authenticate using the dictionary (NOT a filename)
+    gc = gspread.service_account_from_dict(service_account_info)
+    
+    # 3. Open the sheet
+    sh = gc.open("Workshop_Leads") 
     leads_sheet = sh.worksheet("Leads")
     cars_sheet = sh.worksheet("Cars")
+    st.sidebar.success("Connected to Sheets!")
 except Exception as e:
     st.error(f"Spreadsheet Error: {e}")
-    st.info("Check if your tabs are named 'Leads' and 'Cars' exactly.")
     st.stop()
-
 # 2026 Gemini Setup (New SDK)
 GEMINI_KEY = "AIzaSyCWHYT0dPymBF_DG5giFXFC6RXTEzRyXNU"
 client = genai.Client(api_key=GEMINI_KEY)

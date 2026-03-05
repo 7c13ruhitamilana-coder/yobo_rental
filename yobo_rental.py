@@ -6,47 +6,60 @@ from datetime import datetime
 # --- 1. PAGE CONFIG & THEME ---
 st.set_page_config(page_title="Yobo Car Rentals", page_icon="🚗", layout="wide")
 
-# INTERNAL CSS FOR THE "AI ASSISTANT" & "MENU GRID" LOOK
+# CUSTOM CSS FOR NEUE HAAS GROTESK & GRADIENT BORDERS
 st.markdown("""
     <style>
+        /* Import Neue Haas Grotesk (using Inter as a high-quality fallback if needed) */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@700;800&display=swap');
+
         /* Global Styles */
         .stApp { background-color: #0E1117; color: white; }
         
-        /* Heading Gradient - Match Sample 1 */
+        /* Heading - Neue Haas Grotesk Style (Inter Bold/ExtraBold) */
         .main-header {
-            font-size: 45px;
-            font-weight: 800;
+            font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 48px;
+            font-weight: 800; /* Extra Bold for that Display look */
+            letter-spacing: -0.02em; /* Tighter letter spacing like Neue Haas */
             background: -webkit-linear-gradient(#A78BFA, #6366F1);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             text-align: center;
             margin-bottom: 30px;
+            text-transform: none;
         }
 
-        /* Pill-Shaped Input - Match Sample 2 */
+        /* Pill-Shaped Input with Gradient Border */
         div[data-baseweb="input"] {
             border-radius: 50px !important;
-            border: 1px solid #30363D !important;
-            background-color: #161B22 !important;
+            border: 2px solid transparent !important;
+            background: linear-gradient(#161B22, #161B22) padding-box,
+                        linear-gradient(90deg, #A78BFA 0%, #6366F1 100%) border-box !important;
             padding: 5px 20px;
         }
 
-        /* Car Cards - Match Sample 3 (Menu Style) */
-        .car-card {
+        /* Car Cards with Gradient Border */
+        .car-card-container {
             background-color: white;
             border-radius: 20px;
+            padding: 2px; /* This creates the border thickness */
+            background: linear-gradient(90deg, #A78BFA 0%, #6366F1 100%);
+            margin-bottom: 25px;
+        }
+
+        .car-card-content {
+            background-color: white;
+            border-radius: 18px;
             padding: 20px;
-            margin-bottom: 20px;
             color: #1A1A1B;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
             display: flex;
             align-items: center;
-            border-left: 8px solid #6366F1; /* Accent Line */
         }
         
         .car-price {
+            font-family: 'Inter', sans-serif;
             font-size: 24px;
-            font-weight: bold;
+            font-weight: 700;
             color: #6366F1;
         }
 
@@ -56,8 +69,9 @@ st.markdown("""
             background: linear-gradient(90deg, #A78BFA 0%, #6366F1 100%);
             color: white;
             border: none;
-            padding: 10px 25px;
-            font-weight: bold;
+            padding: 12px 30px;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -79,14 +93,15 @@ if "user_data" not in st.session_state: st.session_state.user_data = {}
 
 # --- 4. THE FLOW ---
 
-# STEP 1: GREETING (AI STYLE)
+# STEP 1: GREETING
 if st.session_state.step == 1:
     st.markdown("<h1 class='main-header'>Hello! I'm Yobo.</h1>", unsafe_allow_html=True)
-    st.write("<p style='text-align:center; color:#8B949E;'>Type your name below to start your journey.</p>", unsafe_allow_html=True)
+    st.write("<p style='text-align:center; color:#8B949E; font-family:sans-serif;'>Type your name below to start your journey.</p>", unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
         name = st.text_input("", placeholder="Enter your full name...", key="name_input")
+        st.write(" ") # Spacer
         if st.button("Get Started", use_container_width=True) and name:
             st.session_state.user_data['name'] = name
             st.session_state.step = 2
@@ -105,6 +120,7 @@ elif st.session_state.step == 2:
             pickup = st.date_input("Pick up date")
             days = st.number_input("Duration (Days)", min_value=1)
         
+        st.write(" ")
         if st.button("Browse Our Fleet", use_container_width=True):
             if phone and city:
                 st.session_state.user_data.update({"phone": phone, "city": city, "days": days, "pickup": str(pickup)})
@@ -121,33 +137,32 @@ elif st.session_state.step == 3:
     available_cars = [c for c in cars_data if str(c['Available']).upper() == 'Y']
 
     for i, car in enumerate(available_cars):
-        # Create a "Menu Item" card for each car
-        with st.container():
-            col_img, col_txt, col_btn = st.columns([1.5, 2, 1])
-            
-            with col_img:
-                st.image(car['Photo'], use_container_width=True)
-            
-            with col_txt:
-                st.markdown(f"<h2 style='color:white; margin:0;'>{car['Make']} {car['Model']}</h2>", unsafe_allow_html=True)
-                st.markdown(f"<p style='color:#8B949E;'>{car['Details']} • {car['Colour']}</p>", unsafe_allow_html=True)
-                st.markdown(f"<p class='car-price'>₹{car['PricePerDay']} <span style='font-size:14px; color:#8B949E;'>/ day</span></p>", unsafe_allow_html=True)
-            
-            with col_btn:
-                st.write(" ") # Spacer
-                if st.button(f"Select Model", key=f"btn_{i}", use_container_width=True):
-                    st.session_state.user_data['selected_car'] = car
-                    st.session_state.step = 4
-                    st.rerun()
-        st.markdown("<hr style='border:0.1px solid #30363D;'>", unsafe_allow_html=True)
+        # Gradient Border Wrapper
+        st.markdown(f"""
+            <div class="car-card-container">
+                <div class="car-card-content">
+                    <div style="flex: 1.5;"><img src="{car['Photo']}" style="width:100%; border-radius:10px;"></div>
+                    <div style="flex: 2; padding-left: 20px;">
+                        <h2 style="margin:0; font-family:'Inter',sans-serif; font-weight:700;">{car['Make']} {car['Model']}</h2>
+                        <p style="color:#666; margin:5px 0;">{car['Details']} • {car['Colour']}</p>
+                        <p class="car-price">₹{car['PricePerDay']} <span style="font-size:14px; color:#8B949E;">/ day</span></p>
+                    </div>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        if st.button(f"Select {car['Model']}", key=f"btn_{i}", use_container_width=True):
+            st.session_state.user_data['selected_car'] = car
+            st.session_state.step = 4
+            st.rerun()
+        st.markdown("<br>", unsafe_allow_html=True)
 
 # STEP 4: FINAL CONFIRMATION
 elif st.session_state.step == 4:
     car = st.session_state.user_data['selected_car']
-    total = int(car['PricePerDay']) * int(st.session_state.user_data['days'])
+    total = int(car['PricePerDay']) * int(st.session_state.user_state.user_data['days'])
     
     st.markdown("<h1 class='main-header'>Ready to go?</h1>", unsafe_allow_html=True)
-    st.balloons()
     
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
@@ -155,7 +170,6 @@ elif st.session_state.step == 4:
         st.metric("Final Quote", f"₹{total}")
         
         if st.button("Confirm & Finish", use_container_width=True):
-            # Save to Sheets
             leads_sheet.append_row([
                 datetime.now().strftime("%Y-%m-%d"), 
                 st.session_state.user_data['name'], 

@@ -6,15 +6,21 @@ from datetime import datetime
 # --- 1. PAGE CONFIG ---
 st.set_page_config(page_title="Yobo Car Rentals", page_icon="🚗", layout="wide")
 
-# --- 2. THE "CENTERED" CSS ---
+# --- 2. THE "CENTERED" CSS WITH REGULAR FONT ---
 st.markdown("""
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@800&display=swap');
+        /* Import a clean font closest to Neue Haas Grotesk Display */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;800&display=swap');
 
-        /* Background and Global Font */
+        /* Global Styles */
         .stApp {
             background-color: #0E1117 !important;
             font-family: 'Inter', sans-serif !important;
+        }
+
+        /* Set all body text to Regular weight */
+        body, p, span, div, label {
+            font-weight: 400 !important;
         }
 
         /* Center the entire block container vertically */
@@ -23,10 +29,10 @@ st.markdown("""
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 80vh; /* Adjusts height to center in the middle of the screen */
+            min-height: 80vh; 
         }
 
-        /* NEUE HAAS STYLE HEADING */
+        /* HEADING - Remains Bold/Display for Contrast */
         .main-header {
             font-family: 'Inter', sans-serif !important;
             font-size: 55px !important;
@@ -40,7 +46,7 @@ st.markdown("""
             width: 100%;
         }
 
-        /* CENTERED PILL INPUT */
+        /* CENTERED PILL INPUT - Text is now Regular weight */
         div[data-baseweb="input"], div[data-baseweb="base-input"] {
             background-color: #161B22 !important;
             border-radius: 50px !important;
@@ -52,7 +58,8 @@ st.markdown("""
         input {
             color: white !important;
             background-color: transparent !important;
-            text-align: center !important; /* Centers the typing text too */
+            text-align: center !important;
+            font-weight: 400 !important; /* Force Regular weight here */
         }
 
         /* BUTTONS */
@@ -61,12 +68,12 @@ st.markdown("""
             background: linear-gradient(90deg, #A78BFA, #6366F1) !important;
             color: white !important;
             border: none !important;
-            font-weight: 800 !important;
+            font-weight: 800 !important; /* Keep buttons bold for action */
             width: 100% !important;
             margin-top: 10px;
         }
 
-        /* CAR CARDS (Only apply centering to forms/greetings, not list) */
+        /* CAR CARDS */
         .car-card {
             background-color: white !important;
             border-radius: 20px !important;
@@ -76,6 +83,12 @@ st.markdown("""
             align-items: center !important;
             box-shadow: 0 0 0 3px #6366F1 !important;
             text-align: left !important;
+        }
+
+        .car-details-text {
+            color: #4B5563 !important;
+            font-weight: 400 !important; /* Ensuring car details are Regular */
+            font-family: 'Inter', sans-serif !important;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -97,7 +110,7 @@ if "user_data" not in st.session_state: st.session_state.user_data = {}
 
 # --- 5. THE FLOW ---
 
-# STEP 1: GREETING (Now Centered)
+# STEP 1: GREETING
 if st.session_state.step == 1:
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
@@ -108,7 +121,7 @@ if st.session_state.step == 1:
             st.session_state.step = 2
             st.rerun()
 
-# STEP 2: DETAILS (Now Centered)
+# STEP 2: DETAILS
 elif st.session_state.step == 2:
     col1, col2, col3 = st.columns([1,3,1])
     with col2:
@@ -126,7 +139,7 @@ elif st.session_state.step == 2:
                 st.session_state.step = 3
                 st.rerun()
 
-# STEP 3: FLEET (Scrollable list, so centering is vertical start)
+# STEP 3: FLEET
 elif st.session_state.step == 3:
     st.markdown("<h1 class='main-header'>Signature Fleet</h1>", unsafe_allow_html=True)
     cars_data = cars_sheet.get_all_records()
@@ -136,9 +149,9 @@ elif st.session_state.step == 3:
             <div class="car-card">
                 <div style="flex:1"><img src="{car['Photo']}" width="100%" style="border-radius:10px;"></div>
                 <div style="flex:2; color:black; padding-left:20px;">
-                    <h2 style="margin:0;">{car['Make']} {car['Model']}</h2>
-                    <p style="margin:5px 0;">{car['Details']}</p>
-                    <h3 style="color:#6366F1; margin:0;">₹{car['PricePerDay']}/day</h3>
+                    <h2 style="margin:0; font-family:'Inter', sans-serif; font-weight:800;">{car['Make']} {car['Model']}</h2>
+                    <p class="car-details-text" style="margin:5px 0;">{car['Details']}</p>
+                    <h3 style="color:#6366F1; margin:0; font-weight:800;">₹{car['PricePerDay']}/day</h3>
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -146,3 +159,18 @@ elif st.session_state.step == 3:
                 st.session_state.user_data['selected_car'] = car
                 st.session_state.step = 4
                 st.rerun()
+
+# STEP 4: FINAL CONFIRMATION
+elif st.session_state.step == 4:
+    car = st.session_state.user_data['selected_car']
+    user = st.session_state.user_data
+    total = int(car['PricePerDay']) * int(user['days'])
+    
+    st.markdown("<h1 class='main-header'>Ready to go?</h1>", unsafe_allow_html=True)
+    col1, col2, col3 = st.columns([1,2,1])
+    with col2:
+        st.info(f"Booking: {car['Make']} {car['Model']} for {user['days']} days.")
+        st.metric("Final Quote", f"₹{total}")
+        if st.button("Confirm & Finish"):
+            leads_sheet.append_row([datetime.now().strftime("%Y-%m-%d"), user['name'], user['phone'], user['city'], f"{car['Make']} {car['Model']}", total])
+            st.success("Booking saved! We will call you shortly.")

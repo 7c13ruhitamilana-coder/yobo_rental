@@ -6,37 +6,23 @@ from datetime import datetime
 # --- 1. PAGE CONFIG ---
 st.set_page_config(page_title="Yobo Car Rentals", page_icon="🚗", layout="wide")
 
-# --- 2. THE "CENTERED" CSS WITH REGULAR FONT ---
+# --- 2. THE TYPOGRAPHIC HIERARCHY CSS ---
 st.markdown("""
     <style>
-        /* Import a clean font closest to Neue Haas Grotesk Display */
+        /* Using Inter as the closest high-quality match for Neue Haas Grotesk Display */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;800&display=swap');
 
-        /* Global Styles */
+        /* Global App Background */
         .stApp {
             background-color: #0E1117 !important;
             font-family: 'Inter', sans-serif !important;
         }
 
-        /* Set all body text to Regular weight */
-        body, p, span, div, label {
-            font-weight: 400 !important;
-        }
-
-        /* Center the entire block container vertically */
-        .main .block-container {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 80vh; 
-        }
-
-        /* HEADING - Remains Bold/Display for Contrast */
+        /* HEADING - Neue Haas Grotesk Display BOLD */
         .main-header {
             font-family: 'Inter', sans-serif !important;
             font-size: 55px !important;
-            font-weight: 800 !important;
+            font-weight: 800 !important; /* Bold Weight */
             letter-spacing: -0.05em !important;
             background: linear-gradient(90deg, #A78BFA, #6366F1);
             -webkit-background-clip: text;
@@ -46,7 +32,22 @@ st.markdown("""
             width: 100%;
         }
 
-        /* CENTERED PILL INPUT - Text is now Regular weight */
+        /* TEXT & INPUTS - Neue Haas Grotesk Display REGULAR */
+        p, span, div, label, .stMarkdown, .car-details-text {
+            font-family: 'Inter', sans-serif !important;
+            font-weight: 400 !important; /* Regular Weight */
+        }
+
+        /* Centering Container */
+        .main .block-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh; 
+        }
+
+        /* PILL INPUT - Text is REGULAR & CENTERED */
         div[data-baseweb="input"], div[data-baseweb="base-input"] {
             background-color: #161B22 !important;
             border-radius: 50px !important;
@@ -59,16 +60,17 @@ st.markdown("""
             color: white !important;
             background-color: transparent !important;
             text-align: center !important;
-            font-weight: 400 !important; /* Force Regular weight here */
+            font-weight: 400 !important; /* Regular Weight inside input */
+            font-family: 'Inter', sans-serif !important;
         }
 
-        /* BUTTONS */
+        /* BUTTONS - Stay BOLD for Visibility */
         .stButton>button {
             border-radius: 50px !important;
             background: linear-gradient(90deg, #A78BFA, #6366F1) !important;
             color: white !important;
             border: none !important;
-            font-weight: 800 !important; /* Keep buttons bold for action */
+            font-weight: 800 !important;
             width: 100% !important;
             margin-top: 10px;
         }
@@ -85,10 +87,11 @@ st.markdown("""
             text-align: left !important;
         }
 
-        .car-details-text {
-            color: #4B5563 !important;
-            font-weight: 400 !important; /* Ensuring car details are Regular */
+        .car-title {
             font-family: 'Inter', sans-serif !important;
+            font-weight: 800 !important; /* Bold for the Car Name */
+            color: #1A1A1B;
+            margin: 0;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -101,7 +104,7 @@ try:
     leads_sheet = sh.worksheet("Leads")
     cars_sheet = sh.worksheet("Cars")
 except Exception as e:
-    st.error("Check Secrets.")
+    st.error("Database connection failed.")
     st.stop()
 
 # --- 4. SESSION STATE ---
@@ -149,8 +152,8 @@ elif st.session_state.step == 3:
             <div class="car-card">
                 <div style="flex:1"><img src="{car['Photo']}" width="100%" style="border-radius:10px;"></div>
                 <div style="flex:2; color:black; padding-left:20px;">
-                    <h2 style="margin:0; font-family:'Inter', sans-serif; font-weight:800;">{car['Make']} {car['Model']}</h2>
-                    <p class="car-details-text" style="margin:5px 0;">{car['Details']}</p>
+                    <h2 class="car-title">{car['Make']} {car['Model']}</h2>
+                    <p class="car-details-text" style="margin:5px 0; color:#4B5563;">{car['Details']} • {car['Colour']}</p>
                     <h3 style="color:#6366F1; margin:0; font-weight:800;">₹{car['PricePerDay']}/day</h3>
                 </div>
             </div>
@@ -174,3 +177,4 @@ elif st.session_state.step == 4:
         if st.button("Confirm & Finish"):
             leads_sheet.append_row([datetime.now().strftime("%Y-%m-%d"), user['name'], user['phone'], user['city'], f"{car['Make']} {car['Model']}", total])
             st.success("Booking saved! We will call you shortly.")
+            
